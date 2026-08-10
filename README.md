@@ -2,13 +2,12 @@
 
 Unity 2022.3.22f1向けのVRC Avatar Editor改変版です。パッケージ本体は[`Packages/com.gredia.vrc-avatar-editor`](Packages/com.gredia.vrc-avatar-editor)にあります。
 
-方針：
-機能面はオリジナル版とほぼ同様です。
-NDMFのプレビューなどを対応して現環境で扱いやすくします。
+機能面はオリジナル版とほぼ同様です。  
+NDMFのプレビューなどを対応して現環境で扱いやすくします。  
 
 
 ## VCCでインストール
-**導入前に必ずオリジナル版（Unitypackage版,VPM版）を削除してから行ってください**
+**導入前に必ずオリジナル版（Unitypackage版,VPM版）を削除してから行ってください**  
 次の順にVPMリポジトリをVCCへ追加してください。
 
 1. `https://vpm.nadena.dev/vpm.json`
