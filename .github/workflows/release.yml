@@ -1,0 +1,66 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PACKAGE_NAME: com.gredia.vrc-avatar-editor
+  PACKAGE_PATH: Packages/com.gredia.vrc-avatar-editor
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
+
+      - name: Get package version
+        id: version
+        uses: zoexx/github-action-json-file-properties@b9f36ce6ee6fe2680cd3c32b2c62e22eade7e590
+        with:
+          file_path: ${{ env.PACKAGE_PATH }}/package.json
+          prop_path: version
+
+      - name: Set release filenames
+        run: |
+          echo "zipFile=${PACKAGE_NAME}-${{ steps.version.outputs.value }}.zip" >> "$GITHUB_ENV"
+          echo "unityPackage=${PACKAGE_NAME}-${{ steps.version.outputs.value }}.unitypackage" >> "$GITHUB_ENV"
+          echo "version=${{ steps.version.outputs.value }}" >> "$GITHUB_ENV"
+
+      - name: Validate package identity and version
+        run: |
+          test -f "${PACKAGE_PATH}/package.json"
+          grep -Fq '"name": "com.gredia.vrc-avatar-editor"' "${PACKAGE_PATH}/package.json"
+          grep -Fq "private const string TOOL_VERSION = \"v${version}\";" "${PACKAGE_PATH}/Editor/VRCAvatarEditorGUI.cs"
+
+      - name: Create package ZIP
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: zip -r "${{ github.workspace }}/${zipFile}" .
+
+      - name: Track package meta files
+        run: find "${PACKAGE_PATH}/" -name '*.meta' > metaList
+
+      - name: Create unitypackage fallback
+        uses: pCYSl5EDgo/create-unitypackage@v1.2.3
+        with:
+          package-path: ${{ env.unityPackage }}
+          include-files: metaList
+
+      - name: Create version tag
+        id: tag_version
+        uses: rickstaa/action-create-tag@88dbf7ff6fe2405f8e8f6c6fdfd78829bc631f83
+        with:
+          tag: ${{ env.version }}
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        with:
+          files: |
+            ${{ env.zipFile }}
+            ${{ env.unityPackage }}
+            ${{ env.PACKAGE_PATH }}/package.json
+          tag_name: ${{ env.version }}
+          fail_on_unmatched_files: true

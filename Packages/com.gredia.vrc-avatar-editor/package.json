@@ -1,0 +1,29 @@
+{
+  "name": "com.gredia.vrc-avatar-editor",
+  "displayName": "VRC Avatar Editor (Community Fork)",
+  "version": "0.7.0",
+  "unity": "2022.3",
+  "description": "VRChat avatar editing tools with NDMF-powered avatar preview support.",
+  "author": {
+    "name": "gredia",
+    "email": "gredia@users.noreply.github.com",
+    "url": "https://github.com/gredia"
+  },
+  "license": "Zlib",
+  "licensesUrl": "https://github.com/gredia/VRCAvatarEditor_C/blob/master/Packages/com.gredia.vrc-avatar-editor/LICENSE.txt",
+  "documentationUrl": "https://github.com/gredia/VRCAvatarEditor_C/blob/master/Packages/com.gredia.vrc-avatar-editor/README.md",
+  "changelogUrl": "https://github.com/gredia/VRCAvatarEditor_C/blob/master/Packages/com.gredia.vrc-avatar-editor/CHANGELOG.md",
+  "keywords": [
+    "vrchat",
+    "avatar",
+    "editor",
+    "ndmf"
+  ],
+  "vpmDependencies": {
+    "com.vrchat.avatars": ">=3.10.0 <3.11.0",
+    "nadena.dev.ndmf": ">=1.14.4 <2.0.0-a"
+  },
+  "legacyFolders": {
+    "Assets\\VRCAvatarEditor": ""
+  }
+}

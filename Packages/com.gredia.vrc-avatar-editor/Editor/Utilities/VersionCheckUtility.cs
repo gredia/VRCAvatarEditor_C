@@ -17,7 +17,7 @@ namespace VRCAvatarEditor.Utilities
             var request = UnityWebRequest.Get(githubReleaseApiUrl);
             await request.SendWebRequest();
 
-            if (request.isNetworkError || request.isHttpError)
+            if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError(request.error);
                 return string.Empty;

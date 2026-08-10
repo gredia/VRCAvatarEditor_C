@@ -1,0 +1,26 @@
+{
+    "name": "VRCAvatarEditor.NDMF.Editor",
+    "rootNamespace": "VRCAvatarEditor.NDMF",
+    "references": [
+        "nadena.dev.ndmf"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VRC_AVATAR_EDITOR_NDMF"
+    ],
+    "versionDefines": [
+        {
+            "name": "nadena.dev.ndmf",
+            "expression": "[1.14.4,2.0.0-a)",
+            "define": "VRC_AVATAR_EDITOR_NDMF"
+        }
+    ],
+    "noEngineReferences": false
+}

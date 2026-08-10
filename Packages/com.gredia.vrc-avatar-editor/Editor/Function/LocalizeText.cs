@@ -1,5 +1,4 @@
-﻿using Amazon.Auth.AccessControlPolicy;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -139,7 +138,7 @@ namespace VRCAvatarEditor
             var request = UnityWebRequest.Get($"{SPREAD_SHEET_API_URL}?sheetName={sheetName}");
             await request.SendWebRequest();
 
-            if (request.isNetworkError || request.isHttpError)
+            if (request.result != UnityWebRequest.Result.Success)
             {
                 // エラーの場合は空文字を返す
                 Debug.LogError(request.error);

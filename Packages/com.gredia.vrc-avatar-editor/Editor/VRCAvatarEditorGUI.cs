@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Networking;
 using VRCAvatarEditor.Utilities;
 #if VRC_SDK_VRCSDK2
 using VRCSDK2;
@@ -29,13 +25,14 @@ namespace VRCAvatarEditor
 {
     public class VRCAvatarEditorGUI : EditorWindow
     {
-        private const string TOOL_VERSION = "v0.6.3";
+        private const string TOOL_VERSION = "v0.7.0";
         private const string TWITTER_ID = "gatosyocora";
         private const string DISCORD_ID = "gatosyocora#9575";
         private const string MANUAL_URL = "https://docs.google.com/document/d/1DU7mP5PTvERqHzZiiCBJ9ep5CilQ1iaXC_3IoiuPEgA/edit?usp=sharing";
         private const string BOOTH_URL = "gatosyocora.booth.pm";
         private const string BOOTH_ITEM_URL = "https://booth.pm/ja/items/1258744";
-        private static readonly string GITHUB_LATEST_RELEASE_API_URL = "https://api.github.com/repos/gatosyocora/VRCAvatarEditor/releases/latest";
+        private const string FORK_REPOSITORY_URL = "https://github.com/gredia/VRCAvatarEditor_C";
+        private const string FORK_RELEASES_URL = FORK_REPOSITORY_URL + "/releases";
 
         private AvatarMonitorGUI avatarMonitorGUI;
         public AnimationsGUI animationsGUI;
@@ -195,13 +192,13 @@ namespace VRCAvatarEditor
                 }
             }
 
-            SceneView.onSceneGUIDelegate += OnSceneGUI;
+            SceneView.duringSceneGui += OnSceneGUI;
         }
 
         private void OnDisable()
         {
             avatarMonitorGUI.Dispose();
-            SceneView.onSceneGUIDelegate -= OnSceneGUI;
+            SceneView.duringSceneGui -= OnSceneGUI;
         }
 
         private void OnDestroy()
@@ -366,6 +363,16 @@ namespace VRCAvatarEditor
             EditorGUILayout.Space();
         }
 
+        private void OnInspectorUpdate()
+        {
+            if (avatarMonitorGUI != null &&
+                avatarMonitorGUI.avatarMonitorField != null &&
+                avatarMonitorGUI.avatarMonitorField.RequiresContinuousRepaint)
+            {
+                Repaint();
+            }
+        }
+
         void OnSceneGUI(SceneView sceneView)
         {
             if (CurrentTool == ToolFunc.Bounds)
@@ -376,7 +383,7 @@ namespace VRCAvatarEditor
                 }
             }
 
-            SceneView.lastActiveSceneView.Repaint();
+            sceneView.Repaint();
 
         }
 
@@ -436,6 +443,21 @@ namespace VRCAvatarEditor
 
                     GUILayout.FlexibleSpace();
                 }
+            }
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Maintained fork by gredia");
+            using (new EditorGUI.IndentLevelScope())
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("GitHub", FORK_REPOSITORY_URL, GUILayout.Width(500));
+                GatoGUILayout.Button(
+                    LocalizeText.instance.langPair.open,
+                    () => Application.OpenURL(FORK_REPOSITORY_URL),
+                    true,
+                    GUILayout.Width(50));
+                GUILayout.FlexibleSpace();
             }
 
             EditorGUILayout.Space();
@@ -602,21 +624,10 @@ namespace VRCAvatarEditor
             GetWindow<AnimationLoaderGUI>("Animation Loader", typeof(VRCAvatarEditorGUI));
         }
 
-        [MenuItem("VRCAvatarEditor/Check for Updates")]
-        public static async void CheckForUpdates()
+        [MenuItem("VRCAvatarEditor/Open Releases")]
+        public static void OpenReleases()
         {
-            var remoteVersion = await VersionCheckUtility.GetLatestVersionFromRemote(GITHUB_LATEST_RELEASE_API_URL);
-            var isLatest = VersionCheckUtility.IsLatestVersion(TOOL_VERSION, remoteVersion);
-            var message = (isLatest) ? 
-                            LocalizeText.instance.langPair.localIsLatestMessageText.Replace("<LocalVersion>", TOOL_VERSION) :
-                            LocalizeText.instance.langPair.remoteIsLatestMessageText.Replace("<LocalVersion>", TOOL_VERSION).Replace("<RemoteVersion>", remoteVersion);
-            var okText = (isLatest) ? 
-                            LocalizeText.instance.langPair.ok :
-                            LocalizeText.instance.langPair.downloadLatestButtonText;
-            if (EditorUtility.DisplayDialog(LocalizeText.instance.langPair.checkVersionDialogTitle, message, okText) && !isLatest) 
-            {
-                Application.OpenURL(BOOTH_ITEM_URL);
-            }
+            Application.OpenURL(FORK_RELEASES_URL);
         }
 
         // TODO: NowLoadingをもう少しいい感じにする

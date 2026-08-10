@@ -141,8 +141,8 @@ namespace VRCAvatarEditor.Avatars3
                        states[selectedStateIndex].state.motion = createdAnimClip;
                        EditorUtility.SetDirty(controller);
 
-                                    // 可能であればもう一方の手も同じAnimationClipを設定する
-                                    if (setLeftAndRight)
+                       // 可能であればもう一方の手も同じAnimationClipを設定する
+                       if (setLeftAndRight)
                        {
                            var layerName = editAvatar.FxController.layers[editAvatar.TargetFxLayerIndex].name;
                            string targetLayerName = string.Empty;
@@ -202,6 +202,7 @@ namespace VRCAvatarEditor.Avatars3
                 AnimationClip handPoseAnim = null)
         {
             this.animName = animName;
+            this.selectedStateIndex = selectStateIndex;
             // TODO: 一時対処
             this.selectedHandAnim = HandPose.HandPoseType.NoSelection;
             if (handPoseAnim is null)

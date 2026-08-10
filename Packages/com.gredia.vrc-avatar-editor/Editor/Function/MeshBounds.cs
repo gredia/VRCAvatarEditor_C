@@ -96,8 +96,6 @@ namespace VRCAvatarEditor
         {
             foreach (var renderer in renderers)
             {
-                PrefabUtility.ReconnectToLastPrefab(renderer.gameObject);
-
                 var so = new SerializedObject(renderer);
                 so.Update();
 

@@ -21,8 +21,6 @@ namespace VRCAvatarEditor.Avatars3
 
         private AnimatorController fxController;
 
-        private int layerIndex = 0;
-
         public void Initialize(VRCAvatar editAvatar,
                                VRCAvatar originalAvatar,
                                string saveFolderPath,

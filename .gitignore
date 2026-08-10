@@ -55,14 +55,15 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
-# VRCAvatarEditor以外は除く
-Assets/*
-!Assets/VRCAvatarEditor/
+# このリポジトリではVPMパッケージ本体だけをPackages配下で管理する
+/Assets/*
+!/Assets/.gitkeep
 
-# 作成したAnimationファイルは除く
-Assets/VRCAvatarEditor/Animations/*.anim
-!Assets/VRCAvatarEditor/Animations/Dummy.anim
+/Packages/*
+!/Packages/manifest.json
+!/Packages/packages-lock.json
+!/Packages/vpm-manifest.json
+!/Packages/com.gredia.vrc-avatar-editor/
 
 # Crashlytics generated file
 crashlytics-build.properties
-

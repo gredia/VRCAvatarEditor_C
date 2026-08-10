@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -26,11 +25,18 @@ namespace VRCAvatarEditor.Utilities
         /// <returns></returns>
         public static string GetVRCSDKFilePath(string fileName)
         {
-            // VRCSDKフォルダが移動されている可能性があるため対象ファイルを探す
+            // VPM版SDKはPackages/com.vrchat.*配下にあるため、フォルダ名ではなく
+            // 完全一致するファイル名を優先して検索する。
             return AssetDatabase.FindAssets(fileName)
                         .Select(g => AssetDatabase.GUIDToAssetPath(g))
-                        .Where(p => p.Contains("/VRCSDK/") || p.Contains("VRChat Examples"))
-                        .OrderBy(p => Path.GetFileName(p).Count())
+                        .Where(path => string.Equals(
+                            Path.GetFileNameWithoutExtension(path),
+                            fileName,
+                            StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(path => path.StartsWith(
+                            "Packages/com.vrchat.",
+                            StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                        .ThenBy(path => path.Length)
                         .FirstOrDefault();
         }
 

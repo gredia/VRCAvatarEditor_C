@@ -26,10 +26,13 @@ namespace VRCAvatarEditor
         private RenderTexture renderTexture;
         private int monitorSize;
         private Material textureMat;
+        private OptionalNDMFPreview ndmfPreview;
 
         private VRC_AvatarDescriptor descriptor;
 
         public VRCAvatar avatar { get; private set; }
+        public bool RequiresContinuousRepaint =>
+            ndmfPreview != null && ndmfPreview.IsAvailable && avatarObj != null;
         private SkinnedMeshRenderer faceMesh;
 
         private Rect rect;
@@ -107,6 +110,7 @@ namespace VRCAvatarEditor
 
             var oldAllowPipes = Unsupported.useScriptableRenderPipeline;
             Unsupported.useScriptableRenderPipeline = false;
+            ndmfPreview?.PrepareForRender();
             camera.Render();
             Unsupported.useScriptableRenderPipeline = oldAllowPipes;
 
@@ -154,6 +158,8 @@ namespace VRCAvatarEditor
 
         public VRCAvatar AddAvatar(VRC_AvatarDescriptor descriptor)
         {
+            DisposeNDMFPreview();
+
             if (avatarObj != null)
                 UnityEngine.Object.DestroyImmediate(avatarObj);
 
@@ -167,6 +173,7 @@ namespace VRCAvatarEditor
             newAvatarObj.transform.position = new Vector3(0, 0, 0);
             this.descriptor = newAvatarObj.GetComponent<VRC_AvatarDescriptor>();
             avatar = new VRCAvatar(this.descriptor);
+            ndmfPreview = OptionalNDMFPreview.TryCreate(camera, avatarObj, scene);
             ResetCameraTransform();
 
             return avatar;
@@ -313,6 +320,8 @@ namespace VRCAvatarEditor
 
         public void Dispose()
         {
+            DisposeNDMFPreview();
+
             camera.targetTexture = null;
             if (renderTexture != null)
             {
@@ -335,6 +344,11 @@ namespace VRCAvatarEditor
 
             EditorSceneManager.ClosePreviewScene(scene);
         }
+
+        private void DisposeNDMFPreview()
+        {
+            ndmfPreview?.Dispose();
+            ndmfPreview = null;
+        }
     }
 }
-
