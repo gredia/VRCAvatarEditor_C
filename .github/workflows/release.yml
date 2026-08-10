@@ -2,6 +2,16 @@ name: Build Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/release.yml
+      - Packages/com.gredia.vrc-avatar-editor/package.json
+
+concurrency:
+  group: build-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -36,26 +46,43 @@ jobs:
           grep -Fq '"name": "com.gredia.vrc-avatar-editor"' "${PACKAGE_PATH}/package.json"
           grep -Fq "private const string TOOL_VERSION = \"v${version}\";" "${PACKAGE_PATH}/Editor/VRCAvatarEditorGUI.cs"
 
+      - name: Check whether release already exists
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${version}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release ${version} already exists; skipping publication."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create package ZIP
+        if: steps.release.outputs.exists != 'true'
         working-directory: ${{ env.PACKAGE_PATH }}
         run: zip -r "${{ github.workspace }}/${zipFile}" .
 
       - name: Track package meta files
+        if: steps.release.outputs.exists != 'true'
         run: find "${PACKAGE_PATH}/" -name '*.meta' > metaList
 
       - name: Create unitypackage fallback
+        if: steps.release.outputs.exists != 'true'
         uses: pCYSl5EDgo/create-unitypackage@v1.2.3
         with:
           package-path: ${{ env.unityPackage }}
           include-files: metaList
 
       - name: Create version tag
+        if: steps.release.outputs.exists != 'true'
         id: tag_version
         uses: rickstaa/action-create-tag@88dbf7ff6fe2405f8e8f6c6fdfd78829bc631f83
         with:
           tag: ${{ env.version }}
 
       - name: Publish GitHub Release
+        if: steps.release.outputs.exists != 'true'
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
         with:
           files: |
