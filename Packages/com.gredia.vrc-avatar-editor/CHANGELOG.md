@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.2] - 2026-08-10
+
+### Fixed
+
+- Instantiate the editable avatar monitor copy directly in its preview scene instead of moving an enabled hierarchy between scenes, preventing additional `MAMoveIndependently` `TransformAccessArray` index errors.
+
 ## [0.9.1] - 2026-08-10
 
 ### Fixed

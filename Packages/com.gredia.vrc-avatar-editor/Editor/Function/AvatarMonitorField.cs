@@ -133,6 +133,45 @@ namespace VRCAvatarEditor
             SceneManager.MoveGameObjectToScene(obj, scene);
         }
 
+        private GameObject InstantiateAvatarInPreviewScene(GameObject original)
+        {
+            // Instantiate below an inactive, component-free object that already belongs
+            // to the preview scene. The avatar is therefore born in its destination scene
+            // and is never moved while ExecuteInEditMode components are enabled.
+            var stagingRoot = new GameObject("VRCAvatarEditor avatar staging root")
+            {
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            stagingRoot.SetActive(false);
+            AddGameObject(stagingRoot);
+
+            try
+            {
+                var instance = UnityEngine.Object.Instantiate(
+                    original,
+                    stagingRoot.transform,
+                    true);
+                instance.name = original.name;
+                instance.transform.position = Vector3.zero;
+                instance.transform.rotation = Quaternion.identity;
+                instance.SetActive(true);
+                instance.transform.SetParent(null, true);
+
+                if (instance.scene != scene)
+                {
+                    UnityEngine.Object.DestroyImmediate(instance);
+                    throw new InvalidOperationException(
+                        "The avatar monitor copy was not instantiated in its preview scene.");
+                }
+
+                return instance;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(stagingRoot);
+            }
+        }
+
         private GameObject CreateCameraObj()
         {
             var cameraObj = new GameObject("Camera", typeof(Camera));
@@ -164,14 +203,8 @@ namespace VRCAvatarEditor
             if (avatarObj != null)
                 UnityEngine.Object.DestroyImmediate(avatarObj);
 
-            var newAvatarObj = GameObject.Instantiate(descriptor.gameObject);
-            newAvatarObj.name = descriptor.gameObject.name;
-            newAvatarObj.transform.position = Vector3.zero;
-            newAvatarObj.transform.rotation = Quaternion.identity;
-            newAvatarObj.SetActive(true);
-            AddGameObject(newAvatarObj);
+            var newAvatarObj = InstantiateAvatarInPreviewScene(descriptor.gameObject);
             this.avatarObj = newAvatarObj;
-            newAvatarObj.transform.position = new Vector3(0, 0, 0);
             this.descriptor = newAvatarObj.GetComponent<VRC_AvatarDescriptor>();
             avatar = new VRCAvatar(this.descriptor);
             ndmfPreview = OptionalNDMFPreview.TryCreate(camera, avatarObj, scene);
