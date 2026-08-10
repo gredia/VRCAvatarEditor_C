@@ -1,5 +1,4 @@
-﻿#if VRC_SDK_VRCSDK3
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -174,6 +173,16 @@ namespace VRCAvatarEditor.Avatars3
             // まばたき防止機構をつける
             SetNoBlink(createdFxController);
 
+            // VRChatのFXレイヤーは、先頭レイヤーにAvatarMaskがあると
+            // ハンドアニメーションが正常に動作しないため、コピー元のMaskを外す。
+            createdFxController.layers = createdFxController.layers
+                .Select((layer, index) =>
+                {
+                    if (index == 0) layer.avatarMask = null;
+                    return layer;
+                })
+                .ToArray();
+
             if (!originalAvatar.Descriptor.customizeAnimationLayers)
             {
                 EnableCustomPlayableLayers(originalAvatar);
@@ -226,4 +235,3 @@ namespace VRCAvatarEditor.Avatars3
         }
     }
 }
-#endif

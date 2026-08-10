@@ -27,6 +27,8 @@ NDMFは必須依存です。Modular Avatar自体への直接依存はありま�
 - NDMF 1.14.4のプレビューをアバターモニターへ反映
 - Modular AvatarなどによるNDMFプレビュー上の位置・構造変更へ対応
 - 表情アニメーションの「編集」で選んだステートへ、作成したAnimationClipを設定
+- 新規FX Controllerの先頭AvatarMaskに起因するハンドアニメーション不具合を修正
+- フォーク元v0.7.1〜v0.8.0の変更を監査し、VRCSDK2対応コードと旧更新チェックを削除
 - ユーザー設定をパッケージ外の`UserSettings/VRCAvatarEditorSettings.json`へ保存
 
 ## ライセンスと原作者

@@ -1,5 +1,4 @@
-﻿#if VRC_SDK_VRCSDK3
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -223,4 +222,3 @@ namespace VRCAvatarEditor.Avatars3
         }
     }
 }
-#endif

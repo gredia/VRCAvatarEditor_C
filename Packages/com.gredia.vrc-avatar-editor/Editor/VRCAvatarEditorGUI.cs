@@ -5,19 +5,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using VRCAvatarEditor.Utilities;
-#if VRC_SDK_VRCSDK2
-using VRCSDK2;
-using VRCAvatar = VRCAvatarEditor.Avatars2.VRCAvatar2;
-using AnimationsGUI = VRCAvatarEditor.Avatars2.AnimationsGUI2;
-using VRC_AvatarDescriptor = VRCSDK2.VRC_AvatarDescriptor;
-using FaceEmotionGUI = VRCAvatarEditor.Avatars2.FaceEmotionGUI2;
-#elif VRC_SDK_VRCSDK3
 using VRCAvatar = VRCAvatarEditor.Avatars3.VRCAvatar3;
 using VRC.SDK3.Avatars.Components;
 using VRC_AvatarDescriptor = VRC.SDK3.Avatars.Components.VRCAvatarDescriptor;
 using AnimationsGUI = VRCAvatarEditor.Avatars3.AnimationsGUI3;
 using FaceEmotionGUI = VRCAvatarEditor.Avatars3.FaceEmotionGUI3;
-#endif
 
 // Copyright (c) 2019 gatosyocora
 
@@ -25,8 +17,8 @@ namespace VRCAvatarEditor
 {
     public class VRCAvatarEditorGUI : EditorWindow
     {
-        private const string TOOL_VERSION = "v0.7.0";
-        private const string TWITTER_ID = "gatosyocora";
+        private const string TOOL_VERSION = "v0.9.0";
+        private const string X_ID = "gatosyocora";
         private const string DISCORD_ID = "gatosyocora#9575";
         private const string MANUAL_URL = "https://docs.google.com/document/d/1DU7mP5PTvERqHzZiiCBJ9ep5CilQ1iaXC_3IoiuPEgA/edit?usp=sharing";
         private const string BOOTH_URL = "gatosyocora.booth.pm";
@@ -418,11 +410,11 @@ namespace VRCAvatarEditor
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField("Twitter", "@" + TWITTER_ID, GUILayout.Width(300));
+                    EditorGUILayout.LabelField("X", "@" + X_ID, GUILayout.Width(300));
                     GatoGUILayout.Button(
                         LocalizeText.instance.langPair.open,
                         () => {
-                            Application.OpenURL("https://twitter.com/" + TWITTER_ID);
+                            Application.OpenURL("https://x.com/" + X_ID);
                         },
                         true,
                         GUILayout.Width(50));
