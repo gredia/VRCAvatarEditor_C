@@ -1,4 +1,4 @@
-VRC Avatar Editor (Community Fork) v0.9.2
+VRC Avatar Editor (Community Fork) v0.9.3
 
 VRChatで使用するアバターの作成・編集を支援するエディター拡張です。
 このパッケージはgatosyocora氏によるVRC Avatar Editorの改変版です。
@@ -12,6 +12,7 @@ VRChatで使用するアバターの作成・編集を支援するエディタ�
 - NDMFプレビューを表情編集用アバターモニターへ反映
 - Modular Avatarなどによるプレビュー上の位置・構造変更へ対応
 - MA Move Independentlyを含むアバター複製時のPreview Scene移動エラーを修正
+- FXステート名をUnity標準ラベルと同じ文字色で表示
 - 「編集」で選択したステートへ作成済みAnimationClipを設定
 - 新規FX Controllerの先頭AvatarMaskに起因するハンドアニメーション不具合を修正
 - フォーク元v0.8.0に合わせてVRCSDK2対応コードを削除

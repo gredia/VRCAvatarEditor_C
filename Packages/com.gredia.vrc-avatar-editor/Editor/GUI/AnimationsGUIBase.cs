@@ -13,13 +13,10 @@ namespace VRCAvatarEditor.Base
 
         protected string saveFolderPath;
 
-        private GUIStyle normalStyle = new GUIStyle();
-        private GUIStyle errorStyle = new GUIStyle();
+        private GUIStyle errorStyle;
 
         protected void Initialize(string saveFolderPath)
         {
-            errorStyle.normal.textColor = Color.red;
-
             UpdateSaveFolderPath(saveFolderPath);
         }
 
@@ -35,7 +32,12 @@ namespace VRCAvatarEditor.Base
             AnimationClip retClip;
             using (new EditorGUILayout.HorizontalScope(GUILayout.Width(350)))
             {
-                GUILayout.Label(label, hasError ? errorStyle : normalStyle, GUILayout.Width(100));
+                // Use the exact standard editor label style used by fields such as
+                // "Layer". Resolve it during OnGUI so Unity's editor skin is ready.
+                GUILayout.Label(
+                    label,
+                    hasError ? GetErrorStyle() : EditorStyles.label,
+                    GUILayout.Width(100));
 
                 retClip = GatoGUILayout.ObjectField(
                     string.Empty,
@@ -46,6 +48,15 @@ namespace VRCAvatarEditor.Base
                 contents?.Invoke();
             }
             return retClip;
+        }
+
+        private GUIStyle GetErrorStyle()
+        {
+            if (errorStyle != null) return errorStyle;
+
+            errorStyle = new GUIStyle(EditorStyles.label);
+            errorStyle.normal.textColor = Color.red;
+            return errorStyle;
         }
 
         protected AnimationClip EdittableAnimationField(string label, AnimationClip clip, bool hasError, bool edittable, Action OnEdit)

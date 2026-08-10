@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.3] - 2026-08-10
+
+### Fixed
+
+- Use Unity's editor label style for FX state names such as `Idle` and `Gun`, keeping their text readable with the active editor skin.
+
 ## [0.9.2] - 2026-08-10
 
 ### Fixed
