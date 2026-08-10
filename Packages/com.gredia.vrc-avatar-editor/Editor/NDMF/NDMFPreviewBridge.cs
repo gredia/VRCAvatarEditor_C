@@ -43,7 +43,6 @@ namespace VRCAvatarEditor.NDMF
         private PreviewSession sourceSession;
         private PreviewSession previewSession;
         private Scene ndmfScene;
-        private Scene editingScene;
         private GameObject sourceAvatarRoot;
         private IDisposable defaultPreviewExclusion;
         private bool isDisposed;
@@ -70,6 +69,7 @@ namespace VRCAvatarEditor.NDMF
 
             RefreshSession();
             SynchronizeSourceAvatar();
+            SetSourceRenderersForceRenderingOff();
 
             var sceneCullingMask = EditorSceneManager.GetSceneCullingMask(ownerScene);
             if (previewSession != null && ndmfScene.IsValid() && ndmfScene.isLoaded)
@@ -78,6 +78,16 @@ namespace VRCAvatarEditor.NDMF
             }
 
             camera.overrideSceneCullingMask = sceneCullingMask;
+        }
+
+        public void FinishRender()
+        {
+            if (isDisposed) return;
+
+            // NDMF temporarily changes forceRenderingOff while rendering and restores it
+            // in Camera.onPostRender. Keep the synchronized source hidden from every
+            // other editor camera after the avatar monitor has finished rendering.
+            SetSourceRenderersForceRenderingOff();
         }
 
         private void RefreshSession()
@@ -90,9 +100,7 @@ namespace VRCAvatarEditor.NDMF
                 ndmfScene.IsValid() &&
                 ndmfScene.isLoaded &&
                 sourceAvatarRoot.scene == ndmfScene &&
-                editingScene.IsValid() &&
-                editingScene.isLoaded &&
-                avatarRoot.scene == editingScene;
+                avatarRoot.scene == ownerScene;
 
             if (ReferenceEquals(currentSession, sourceSession) &&
                 (currentSession == null || (previewSession != null && sourceAvatarIsReady)))
@@ -124,27 +132,52 @@ namespace VRCAvatarEditor.NDMF
                     "Could not obtain the NDMF preview scene for the avatar monitor.");
             }
 
-            sourceAvatarRoot = UnityEngine.Object.Instantiate(avatarRoot);
+            sourceAvatarRoot = InstantiateInScene(avatarRoot, ndmfScene);
             sourceAvatarRoot.name = avatarRoot.name;
             sourceAvatarRoot.hideFlags = HideFlags.None;
-            SceneManager.MoveGameObjectToScene(sourceAvatarRoot, ndmfScene);
+            SceneVisibilityManager.instance.Hide(sourceAvatarRoot, true);
             ExcludeSourceAvatarFromDefaultPreview();
 
             transformPairs.Clear();
             rendererPairs.Clear();
             BuildSynchronizationMap(avatarRoot.transform, sourceAvatarRoot.transform);
             SynchronizeSourceAvatar();
+            SetSourceRenderersForceRenderingOff();
+        }
 
-            // Keep the editable avatar alive but outside the camera's combined scene
-            // culling mask. This prevents it from overlapping the synchronized copy
-            // while the asynchronous NDMF proxy pipeline is being prepared.
-            editingScene = EditorSceneManager.NewPreviewScene();
-            if (!editingScene.IsValid())
+        private static GameObject InstantiateInScene(GameObject original, Scene destinationScene)
+        {
+            // Instantiate below an inactive, component-free staging root already in
+            // the destination scene. This assigns the clone to that scene without
+            // moving a live ExecuteInEditMode hierarchy between scenes. Unparenting
+            // then invokes OnEnable once, with the clone already at its final root.
+            var stagingRoot = new GameObject("VRCAvatarEditor NDMF staging root")
             {
-                throw new InvalidOperationException(
-                    "Could not create the editing scene for the avatar monitor.");
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            stagingRoot.SetActive(false);
+            SceneManager.MoveGameObjectToScene(stagingRoot, destinationScene);
+
+            try
+            {
+                var instance = UnityEngine.Object.Instantiate(
+                    original,
+                    stagingRoot.transform,
+                    true);
+                instance.transform.SetParent(null, true);
+                if (instance.scene != destinationScene)
+                {
+                    UnityEngine.Object.DestroyImmediate(instance);
+                    throw new InvalidOperationException(
+                        "The avatar monitor source was not instantiated in the NDMF preview scene.");
+                }
+
+                return instance;
             }
-            SceneManager.MoveGameObjectToScene(avatarRoot, editingScene);
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(stagingRoot);
+            }
         }
 
         private void ExcludeSourceAvatarFromDefaultPreview()
@@ -258,6 +291,17 @@ namespace VRCAvatarEditor.NDMF
             }
         }
 
+        private void SetSourceRenderersForceRenderingOff()
+        {
+            foreach (var pair in rendererPairs)
+            {
+                if (pair.Source != null)
+                {
+                    pair.Source.forceRenderingOff = true;
+                }
+            }
+        }
+
         private ImmutableHashSet<Renderer> GetHiddenRenderers(ComputeContext context)
         {
             var sourceTransform = sourceAvatarRoot != null ? sourceAvatarRoot.transform : null;
@@ -288,32 +332,57 @@ namespace VRCAvatarEditor.NDMF
             previewSession = null;
             sourceSession = null;
 
-            defaultPreviewExclusion?.Dispose();
-            defaultPreviewExclusion = null;
-
-            if (sourceAvatarRoot != null)
-            {
-                UnityEngine.Object.DestroyImmediate(sourceAvatarRoot);
-            }
-
-            if (avatarRoot != null &&
-                ownerScene.IsValid() &&
-                ownerScene.isLoaded &&
-                avatarRoot.scene != ownerScene)
-            {
-                SceneManager.MoveGameObjectToScene(avatarRoot, ownerScene);
-            }
-
-            if (editingScene.IsValid() && editingScene.isLoaded)
-            {
-                EditorSceneManager.ClosePreviewScene(editingScene);
-            }
-
+            var sourceToDestroy = sourceAvatarRoot;
+            var exclusionToDispose = defaultPreviewExclusion;
             sourceAvatarRoot = null;
+            defaultPreviewExclusion = null;
+            DestroySourceAvatarAfterUpdate(sourceToDestroy, exclusionToDispose);
+
             ndmfScene = default;
-            editingScene = default;
             transformPairs.Clear();
             rendererPairs.Clear();
+        }
+
+        private static void DestroySourceAvatarAfterUpdate(
+            GameObject source,
+            IDisposable exclusion)
+        {
+            if (source == null)
+            {
+                exclusion?.Dispose();
+                return;
+            }
+
+            foreach (var renderer in source.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.forceRenderingOff = true;
+            }
+
+            // ExecuteInEditMode components such as MA Move Independently register
+            // TransformAccessArray entries from OnEnable. Destroying the clone before
+            // Modular Avatar's next update can invoke OnDisable against the old array.
+            // Waiting for two editor updates lets that registration settle first.
+            var updatesRemaining = 2;
+            EditorApplication.CallbackFunction cleanup = null;
+            cleanup = () =>
+            {
+                updatesRemaining--;
+                if (updatesRemaining > 0) return;
+
+                EditorApplication.update -= cleanup;
+                try
+                {
+                    exclusion?.Dispose();
+                }
+                finally
+                {
+                    if (source != null)
+                    {
+                        UnityEngine.Object.DestroyImmediate(source);
+                    }
+                }
+            };
+            EditorApplication.update += cleanup;
         }
 
         private void OnPlayModeStateChanged(PlayModeStateChange state)

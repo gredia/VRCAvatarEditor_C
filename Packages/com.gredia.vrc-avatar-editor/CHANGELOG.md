@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.1] - 2026-08-10
+
+### Fixed
+
+- Keep the editable avatar in its original preview scene and instantiate the synchronized source directly in the NDMF scene.
+- Defer synchronized-source cleanup until Modular Avatar has refreshed its `TransformAccessArray`, preventing `MAMoveIndependently` index errors.
+- Keep the synchronized NDMF source hidden outside the avatar monitor render.
+
 ## [0.9.0] - 2026-08-10
 
 ### Fixed

@@ -103,10 +103,17 @@ namespace VRCAvatarEditor
             }
 
             var oldAllowPipes = Unsupported.useScriptableRenderPipeline;
-            Unsupported.useScriptableRenderPipeline = false;
-            ndmfPreview?.PrepareForRender();
-            camera.Render();
-            Unsupported.useScriptableRenderPipeline = oldAllowPipes;
+            try
+            {
+                Unsupported.useScriptableRenderPipeline = false;
+                ndmfPreview?.PrepareForRender();
+                camera.Render();
+            }
+            finally
+            {
+                ndmfPreview?.FinishRender();
+                Unsupported.useScriptableRenderPipeline = oldAllowPipes;
+            }
 
             // TODO: Editorを開いた状態で再生すると再生後にAvatarMonitorのガンマ補正がなくなる
             // Disposeによって？textureMatがnullになっているので再生成する

@@ -19,12 +19,17 @@ namespace VRCAvatarEditor
         private static bool hasLoggedMissingIntegration;
 
         private Action prepareForRender;
+        private Action finishRender;
         private Action disposeImplementation;
         private bool isDisposed;
 
-        private OptionalNDMFPreview(Action prepareForRender, Action disposeImplementation)
+        private OptionalNDMFPreview(
+            Action prepareForRender,
+            Action finishRender,
+            Action disposeImplementation)
         {
             this.prepareForRender = prepareForRender;
+            this.finishRender = finishRender;
             this.disposeImplementation = disposeImplementation;
         }
 
@@ -56,32 +61,58 @@ namespace VRCAvatarEditor
                 var prepareMethod = implementationType.GetMethod(
                     "PrepareForRender",
                     BindingFlags.Instance | BindingFlags.Public);
+                var finishMethod = implementationType.GetMethod(
+                    "FinishRender",
+                    BindingFlags.Instance | BindingFlags.Public);
                 var disposeMethod = implementationType.GetMethod(
                     "Dispose",
                     BindingFlags.Instance | BindingFlags.Public);
 
-                if (prepareMethod == null || disposeMethod == null)
+                if (prepareMethod == null || finishMethod == null || disposeMethod == null)
                 {
                     throw new MissingMethodException(
                         implementationType.FullName,
-                        prepareMethod == null ? "PrepareForRender" : "Dispose");
+                        prepareMethod == null
+                            ? "PrepareForRender"
+                            : finishMethod == null
+                                ? "FinishRender"
+                                : "Dispose");
                 }
 
                 var prepare = (Action)Delegate.CreateDelegate(
                     typeof(Action),
                     implementation,
                     prepareMethod);
+                var finish = (Action)Delegate.CreateDelegate(
+                    typeof(Action),
+                    implementation,
+                    finishMethod);
                 var dispose = (Action)Delegate.CreateDelegate(
                     typeof(Action),
                     implementation,
                     disposeMethod);
 
-                return new OptionalNDMFPreview(prepare, dispose);
+                return new OptionalNDMFPreview(prepare, finish, dispose);
             }
             catch (Exception exception)
             {
                 Debug.LogException(UnwrapInvocationException(exception));
                 return null;
+            }
+        }
+
+        public void FinishRender()
+        {
+            if (!IsAvailable) return;
+
+            try
+            {
+                finishRender();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(UnwrapInvocationException(exception));
+                Dispose();
             }
         }
 
@@ -116,6 +147,7 @@ namespace VRCAvatarEditor
             finally
             {
                 prepareForRender = null;
+                finishRender = null;
                 disposeImplementation = null;
             }
         }
