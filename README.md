@@ -23,9 +23,6 @@ NDMFのプレビューなどを対応して現環境で扱いやすくします�
 
 VCCでこのプロジェクトを開く前にNadena VPM Repositoryを登録し、`Packages/vpm-manifest.json`の依存関係を解決してください。
 
-## 公開
-
-GitHub ReleaseとVPM Listingの作成手順は[`DISTRIBUTION.md`](DISTRIBUTION.md)を参照してください。
 
 ## ライセンス
 
